@@ -2,12 +2,12 @@
 
 use crate::untyped::ResourceKind;
 use crate::{
-    collect_used_resources,
+    // collect_used_resources,
     constructor::ResourceConstructorContainer,
     core::{
-        append_extension,
+        // append_extension,
         futures::future::join_all,
-        io::FileLoadError,
+        // io::FileLoadError,
         log::Log,
         make_relative_path, notify,
         parking_lot::{Mutex, MutexGuard},
@@ -19,12 +19,12 @@ use crate::{
     event::{ResourceEvent, ResourceEventBroadcaster},
     io::{FsResourceIo, ResourceIo},
     loader::{ResourceLoader, ResourceLoadersContainer},
-    options::OPTIONS_EXTENSION,
+    // options::OPTIONS_EXTENSION,
     state::{LoadError, ResourceState},
     Resource, ResourceData, TypedResourceData, UntypedResource,
 };
-use fxhash::{FxHashMap, FxHashSet};
-use rayon::prelude::*;
+use fxhash::{FxHashMap/*, FxHashSet*/};
+// use rayon::prelude::*;
 use std::{
     fmt::{Debug, Display, Formatter},
     marker::PhantomData,
@@ -247,108 +247,108 @@ impl ResourceManager {
     }
 
     /// Attempts to move a resource from its current location to the new path.
-    pub async fn move_resource(
-        &self,
-        resource: UntypedResource,
-        new_path: impl AsRef<Path>,
-        working_directory: impl AsRef<Path>,
-        mut filter: impl FnMut(&UntypedResource) -> bool,
-    ) -> Result<(), FileLoadError> {
-        let new_path = new_path.as_ref().to_owned();
-        let io = self.state().resource_io.clone();
-        let existing_path = resource
-            .kind()
-            .into_path()
-            .ok_or_else(|| FileLoadError::Custom("Cannot move embedded resource!".to_string()))?;
-
-        let canonical_existing_path = io.canonicalize_path(&existing_path).await?;
-
-        // Collect all resources referencing the resource.
-        let resources = io
-            .walk_directory(working_directory.as_ref())
-            .await?
-            .map(|p| self.request_untyped(p))
-            .collect::<Vec<_>>();
-        // Filter out all faulty resources.
-        let resources_to_fix = join_all(resources)
-            .await
-            .into_iter()
-            .filter_map(|r| r.ok())
-            .filter(|r| r != &resource && filter(r))
-            .collect::<Vec<_>>();
-
-        // Do the heavy work in parallel.
-        let mut pairs = resources_to_fix
-            .par_iter()
-            .filter_map(|loaded_resource| {
-                let mut guard = loaded_resource.0.lock();
-                if let ResourceState::Ok(ref mut data) = guard.state {
-                    let mut used_resources = FxHashSet::default();
-                    (**data).as_reflect(&mut |reflect| {
-                        collect_used_resources(reflect, &mut used_resources);
-                    });
-                    Some((loaded_resource, used_resources))
-                } else {
-                    None
-                }
-            })
-            .collect::<Vec<_>>();
-
-        // Filter out all resources that does not have references to the moved resource.
-        for (_, used_resources) in pairs.iter_mut() {
-            let mut used_resources_with_references = FxHashSet::default();
-            for resource in used_resources.iter() {
-                // Filter out embedded resources.
-                if let Some(path) = resource.kind().into_path() {
-                    if let Ok(canonical_resource_path) = io.canonicalize_path(&path).await {
-                        // We compare the canonical paths here to check for the same file, not for the
-                        // same path. Remember that there could be any number of paths leading to the
-                        // same file (i.e. "foo/bar/baz.txt" and "foo/bar/../bar/baz.txt" leads to the
-                        // same file, but the paths are different).
-                        if canonical_resource_path == canonical_existing_path {
-                            used_resources_with_references.insert(resource.clone());
-                        }
-                    }
-                }
-            }
-            *used_resources = used_resources_with_references;
-        }
-
-        for (loaded_resource, used_resources) in pairs {
-            if !used_resources.is_empty() {
-                for resource in used_resources {
-                    resource.set_kind(ResourceKind::External(new_path.clone()));
-                }
-
-                let mut header = loaded_resource.0.lock();
-                if let Some(loaded_resource_path) = header.kind.path_owned() {
-                    if let ResourceState::Ok(ref mut data) = header.state {
-                        // Save the resource back.
-                        match data.save(&loaded_resource_path) {
-                            Ok(_) => Log::info(format!(
-                                "Resource {} was saved successfully!",
-                                header.kind
-                            )),
-                            Err(err) => Log::err(format!(
-                                "Unable to save {} resource. Reason: {:?}",
-                                header.kind, err
-                            )),
-                        };
-                    }
-                }
-            }
-        }
-
-        // Move the file with its optional import options.
-        io.move_file(&existing_path, &new_path).await?;
-        let options_path = append_extension(&existing_path, OPTIONS_EXTENSION);
-        if io.exists(&options_path).await {
-            let new_options_path = append_extension(&new_path, OPTIONS_EXTENSION);
-            io.move_file(&options_path, &new_options_path).await?;
-        }
-
-        Ok(())
-    }
+    // pub async fn move_resource(
+    //     &self,
+    //     resource: UntypedResource,
+    //     new_path: impl AsRef<Path>,
+    //     working_directory: impl AsRef<Path>,
+    //     mut filter: impl FnMut(&UntypedResource) -> bool,
+    // ) -> Result<(), FileLoadError> {
+    //     let new_path = new_path.as_ref().to_owned();
+    //     let io = self.state().resource_io.clone();
+    //     let existing_path = resource
+    //         .kind()
+    //         .into_path()
+    //         .ok_or_else(|| FileLoadError::Custom("Cannot move embedded resource!".to_string()))?;
+    //
+    //     let canonical_existing_path = io.canonicalize_path(&existing_path).await?;
+    //
+    //     // Collect all resources referencing the resource.
+    //     let resources = io
+    //         .walk_directory(working_directory.as_ref())
+    //         .await?
+    //         .map(|p| self.request_untyped(p))
+    //         .collect::<Vec<_>>();
+    //     // Filter out all faulty resources.
+    //     let resources_to_fix = join_all(resources)
+    //         .await
+    //         .into_iter()
+    //         .filter_map(|r| r.ok())
+    //         .filter(|r| r != &resource && filter(r))
+    //         .collect::<Vec<_>>();
+    //
+    //     // Do the heavy work in parallel.
+    //     let mut pairs = resources_to_fix
+    //         .par_iter()
+    //         .filter_map(|loaded_resource| {
+    //             let mut guard = loaded_resource.0.lock();
+    //             if let ResourceState::Ok(ref mut data) = guard.state {
+    //                 let mut used_resources = FxHashSet::default();
+    //                 (**data).as_reflect(&mut |reflect| {
+    //                     collect_used_resources(reflect, &mut used_resources);
+    //                 });
+    //                 Some((loaded_resource, used_resources))
+    //             } else {
+    //                 None
+    //             }
+    //         })
+    //         .collect::<Vec<_>>();
+    //
+    //     // Filter out all resources that does not have references to the moved resource.
+    //     for (_, used_resources) in pairs.iter_mut() {
+    //         let mut used_resources_with_references = FxHashSet::default();
+    //         for resource in used_resources.iter() {
+    //             // Filter out embedded resources.
+    //             if let Some(path) = resource.kind().into_path() {
+    //                 if let Ok(canonical_resource_path) = io.canonicalize_path(&path).await {
+    //                     // We compare the canonical paths here to check for the same file, not for the
+    //                     // same path. Remember that there could be any number of paths leading to the
+    //                     // same file (i.e. "foo/bar/baz.txt" and "foo/bar/../bar/baz.txt" leads to the
+    //                     // same file, but the paths are different).
+    //                     if canonical_resource_path == canonical_existing_path {
+    //                         used_resources_with_references.insert(resource.clone());
+    //                     }
+    //                 }
+    //             }
+    //         }
+    //         *used_resources = used_resources_with_references;
+    //     }
+    //
+    //     for (loaded_resource, used_resources) in pairs {
+    //         if !used_resources.is_empty() {
+    //             for resource in used_resources {
+    //                 resource.set_kind(ResourceKind::External(new_path.clone()));
+    //             }
+    //
+    //             let mut header = loaded_resource.0.lock();
+    //             if let Some(loaded_resource_path) = header.kind.path_owned() {
+    //                 if let ResourceState::Ok(ref mut data) = header.state {
+    //                     // Save the resource back.
+    //                     match data.save(&loaded_resource_path) {
+    //                         Ok(_) => Log::info(format!(
+    //                             "Resource {} was saved successfully!",
+    //                             header.kind
+    //                         )),
+    //                         Err(err) => Log::err(format!(
+    //                             "Unable to save {} resource. Reason: {:?}",
+    //                             header.kind, err
+    //                         )),
+    //                     };
+    //                 }
+    //             }
+    //         }
+    //     }
+    //
+    //     // Move the file with its optional import options.
+    //     io.move_file(&existing_path, &new_path).await?;
+    //     let options_path = append_extension(&existing_path, OPTIONS_EXTENSION);
+    //     if io.exists(&options_path).await {
+    //         let new_options_path = append_extension(&new_path, OPTIONS_EXTENSION);
+    //         io.move_file(&options_path, &new_options_path).await?;
+    //     }
+    //
+    //     Ok(())
+    // }
 
     /// Reloads all loaded resources. Normally it should never be called, because it is **very** heavy
     /// method! This method is asynchronous, it uses all available CPU power to reload resources as
