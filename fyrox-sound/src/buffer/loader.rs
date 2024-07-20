@@ -3,7 +3,6 @@
 use crate::buffer::{DataSource, SoundBuffer};
 use fyrox_core::{reflect::prelude::*, uuid::Uuid, TypeUuidProvider};
 use fyrox_resource::{
-    io::ResourceIo,
     loader::{BoxedImportOptionsLoaderFuture, BoxedLoaderFuture, LoaderPayload, ResourceLoader},
     options::{
         try_get_import_settings, try_get_import_settings_opaque, BaseImportOptions, ImportOptions,
@@ -12,6 +11,8 @@ use fyrox_resource::{
 };
 use serde::{Deserialize, Serialize};
 use std::{path::PathBuf, sync::Arc};
+
+pub use fyrox_resource::io::{FsResourceIo, ResourceIo};
 
 /// Defines sound buffer resource import options.
 #[derive(Clone, Deserialize, Serialize, Default, Debug, Reflect)]
