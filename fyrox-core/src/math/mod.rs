@@ -11,15 +11,9 @@ use crate::{
     algebra::Scalar,
     math::{aabb::AxisAlignedBoundingBox, frustum::Frustum, plane::Plane},
     num_traits::NumAssign,
-    reflect::prelude::*,
     visitor::prelude::*,
 };
-use fyrox_core_derive::{impl_reflect, impl_visit};
-use std::fmt::Debug;
-
-impl_reflect!(
-    pub struct Rect<T: Debug> {}
-);
+use fyrox_core_derive::{impl_visit};
 
 impl<T> Visit for Rect<T>
 where
@@ -82,25 +76,6 @@ impl_visit!(
     }
 );
 
-impl_reflect!(
-    pub struct SmoothAngle {
-        angle: f32,
-        target: f32,
-        speed: f32,
-    }
-);
-
-impl_reflect!(
-    pub enum CurveKeyKind {
-        Constant,
-        Linear,
-        Cubic {
-            left_tangent: f32,
-            right_tangent: f32,
-        },
-    }
-);
-
 impl_visit!(
     pub enum CurveKeyKind {
         Constant,
@@ -118,15 +93,6 @@ impl_visit!(
         location: f32,
         pub value: f32,
         pub kind: CurveKeyKind,
-    }
-);
-
-impl_reflect!(
-    #[reflect(hide_all)]
-    pub struct Curve {
-        pub id: Uuid,
-        pub name: String,
-        pub keys: Vec<CurveKey>,
     }
 );
 

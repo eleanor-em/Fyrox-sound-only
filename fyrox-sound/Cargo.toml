@@ -24,4 +24,3 @@ hound = "3.4.0"
 strum = "0.26.1"
 strum_macros = "0.26.1"
 tinyaudio = "0.1.2"
-serde = { version = "1", features = ["derive"] }

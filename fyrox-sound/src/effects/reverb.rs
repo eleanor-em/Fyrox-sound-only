@@ -29,7 +29,7 @@ use crate::{
     dsp::filters::{AllPass, LpfComb},
     effects::EffectRenderTrait,
 };
-use fyrox_core::{reflect::prelude::*, visitor::prelude::*};
+use fyrox_core::{visitor::prelude::*};
 
 #[derive(Default, Debug, Clone, PartialEq, Visit)]
 struct ChannelReverb {
@@ -131,17 +131,13 @@ impl ChannelReverb {
 }
 
 /// See module docs.
-#[derive(Debug, Clone, Reflect, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Reverb {
     dry: f32,
     wet: f32,
-    #[reflect(setter = "set_decay_time", min_value = 0.0)]
     decay_time: f32,
-    #[reflect(setter = "set_fc", min_value = 0.0, max_value = 1.0)]
     fc: f32,
-    #[reflect(hidden)]
     left: ChannelReverb,
-    #[reflect(hidden)]
     right: ChannelReverb,
 }
 

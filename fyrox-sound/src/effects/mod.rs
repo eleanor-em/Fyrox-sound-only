@@ -7,14 +7,14 @@ use crate::{
     },
     effects::reverb::Reverb,
 };
-use fyrox_core::{reflect::prelude::*, uuid_provider, visitor::prelude::*};
+use fyrox_core::{uuid_provider, visitor::prelude::*};
 use strum_macros::{AsRefStr, EnumString, VariantNames};
 
 pub mod filter;
 pub mod reverb;
 
 /// Attenuation effect.
-#[derive(Debug, Clone, PartialEq, Visit, Reflect)]
+#[derive(Debug, Clone, PartialEq, Visit)]
 pub struct Attenuate {
     gain: f32,
 }
@@ -48,7 +48,7 @@ impl EffectRenderTrait for Attenuate {
 /// Effects is a digital signal processing (DSP) unit that transforms input signal in a specific way.
 /// For example, [`LowPassFilterEffect`] could be used to muffle audio sources; to create "underwater"
 /// effect.
-#[derive(Debug, Clone, PartialEq, Visit, Reflect, AsRefStr, EnumString, VariantNames)]
+#[derive(Debug, Clone, PartialEq, Visit, AsRefStr, EnumString, VariantNames)]
 pub enum Effect {
     /// See [`Attenuate`] docs for more info.
     Attenuate(Attenuate),

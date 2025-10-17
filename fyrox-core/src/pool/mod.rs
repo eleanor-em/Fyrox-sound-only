@@ -20,9 +20,9 @@
 //! indirections that might cause cache invalidation. This is the so called cache
 //! friendliness.
 
-use crate::{reflect::prelude::*, visitor::prelude::*, ComponentProvider};
+use crate::{visitor::prelude::*, ComponentProvider};
 use std::{
-    any::{Any, TypeId},
+    any::{TypeId},
     fmt::Debug,
     future::Future,
     marker::PhantomData,
@@ -52,102 +52,6 @@ where
 {
     records: Vec<PoolRecord<T, P>>,
     free_stack: Vec<u32>,
-}
-
-impl<T, P> Reflect for Pool<T, P>
-where
-    T: Reflect,
-    P: PayloadContainer<Element = T> + Reflect,
-{
-    #[inline]
-    fn source_path() -> &'static str {
-        file!()
-    }
-
-    #[inline]
-    fn type_name(&self) -> &'static str {
-        std::any::type_name::<Self>()
-    }
-
-    #[inline]
-    fn doc(&self) -> &'static str {
-        ""
-    }
-
-    #[inline]
-    fn fields_info(&self, func: &mut dyn FnMut(&[FieldInfo])) {
-        func(&[])
-    }
-
-    #[inline]
-    fn into_any(self: Box<Self>) -> Box<dyn Any> {
-        self
-    }
-
-    #[inline]
-    fn as_any(&self, func: &mut dyn FnMut(&dyn Any)) {
-        func(self)
-    }
-
-    #[inline]
-    fn as_any_mut(&mut self, func: &mut dyn FnMut(&mut dyn Any)) {
-        func(self)
-    }
-
-    #[inline]
-    fn as_reflect(&self, func: &mut dyn FnMut(&dyn Reflect)) {
-        func(self)
-    }
-
-    #[inline]
-    fn as_reflect_mut(&mut self, func: &mut dyn FnMut(&mut dyn Reflect)) {
-        func(self)
-    }
-
-    #[inline]
-    fn set(&mut self, value: Box<dyn Reflect>) -> Result<Box<dyn Reflect>, Box<dyn Reflect>> {
-        let this = std::mem::replace(self, value.take()?);
-        Ok(Box::new(this))
-    }
-
-    fn assembly_name(&self) -> &'static str {
-        env!("CARGO_PKG_NAME")
-    }
-
-    fn type_assembly_name() -> &'static str {
-        env!("CARGO_PKG_NAME")
-    }
-
-    #[inline]
-    fn as_array(&self, func: &mut dyn FnMut(Option<&dyn ReflectArray>)) {
-        func(Some(self))
-    }
-
-    #[inline]
-    fn as_array_mut(&mut self, func: &mut dyn FnMut(Option<&mut dyn ReflectArray>)) {
-        func(Some(self))
-    }
-}
-
-impl<T, P> ReflectArray for Pool<T, P>
-where
-    T: Reflect,
-    P: PayloadContainer<Element = T> + Reflect,
-{
-    #[inline]
-    fn reflect_index(&self, index: usize) -> Option<&dyn Reflect> {
-        self.at(index as u32).map(|p| p as &dyn Reflect)
-    }
-
-    #[inline]
-    fn reflect_index_mut(&mut self, index: usize) -> Option<&mut dyn Reflect> {
-        self.at_mut(index as u32).map(|p| p as &mut dyn Reflect)
-    }
-
-    #[inline]
-    fn reflect_len(&self) -> usize {
-        self.get_capacity() as usize
-    }
 }
 
 impl<T, P> PartialEq for Pool<T, P>

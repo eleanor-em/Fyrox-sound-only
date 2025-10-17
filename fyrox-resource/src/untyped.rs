@@ -4,7 +4,7 @@
 
 use crate::{
     core::{
-        math::curve::Curve, parking_lot::Mutex, reflect::prelude::*, uuid, uuid::Uuid,
+        math::curve::Curve, parking_lot::Mutex, uuid, uuid::Uuid,
         visitor::prelude::*, visitor::RegionGuard, TypeUuidProvider,
     },
     manager::ResourceManager,
@@ -63,7 +63,7 @@ fn guess_uuid(region: &mut RegionGuard) -> Uuid {
     Default::default()
 }
 
-#[derive(Default, Reflect, Debug, Visit, Clone, PartialEq, Eq, Hash)]
+#[derive(Default, Debug, Visit, Clone, PartialEq, Eq, Hash)]
 pub enum ResourceKind {
     #[default]
     Embedded,
@@ -147,7 +147,7 @@ impl Display for ResourceKind {
     }
 }
 
-#[derive(Reflect, Debug)]
+#[derive(Debug)]
 pub struct ResourceHeader {
     pub type_uuid: Uuid,
     pub kind: ResourceKind,
@@ -241,7 +241,7 @@ impl Visit for ResourceHeader {
 /// that the resource is in default state. This is a trade-off to prevent wrapping internals into
 /// `Option`, that in some cases could lead to convoluted code with lots of `unwrap`s and state
 /// assumptions.
-#[derive(Clone, Reflect, TypeUuidProvider)]
+#[derive(Clone, TypeUuidProvider)]
 #[type_uuid(id = "21613484-7145-4d1c-87d8-62fa767560ab")]
 pub struct UntypedResource(pub Arc<Mutex<ResourceHeader>>);
 
@@ -454,7 +454,7 @@ mod test {
 
     use super::*;
 
-    #[derive(Debug, Default, Reflect, Visit, Clone, Copy)]
+    #[derive(Debug, Default, Visit, Clone, Copy)]
     struct Stub {}
 
     impl ResourceData for Stub {

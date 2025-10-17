@@ -37,14 +37,13 @@ use crate::{
 };
 use fyrox_core::{
     algebra::Vector3,
-    reflect::prelude::*,
     uuid_provider,
     visitor::{Visit, VisitResult, Visitor},
 };
 use std::time::Duration;
 
 /// Status (state) of sound source.
-#[derive(Eq, PartialEq, Copy, Clone, Debug, Reflect, Visit)]
+#[derive(Eq, PartialEq, Copy, Clone, Debug, Visit)]
 #[repr(u32)]
 pub enum Status {
     /// Sound is stopped - it won't produces any sample and won't load mixer. This is default
@@ -62,28 +61,21 @@ pub enum Status {
 uuid_provider!(Status = "1980bded-86cd-4eff-a5db-bab729bdb3ad");
 
 /// See module info.
-#[derive(Debug, Clone, Reflect, Visit)]
+#[derive(Debug, Clone, Visit)]
 pub struct SoundSource {
     name: String,
-    #[reflect(hidden)]
     buffer: Option<SoundBufferResource>,
     // Read position in the buffer in samples. Differs from `playback_pos` if buffer is streaming.
     // In case of streaming buffer its maximum value will be some fixed value which is
     // implementation defined. It can be less than zero, this happens when we are in the process
     // of reading next block in streaming buffer (see also prev_buffer_sample).
-    #[reflect(hidden)]
     buf_read_pos: f64,
     // Real playback position in samples.
-    #[reflect(hidden)]
     playback_pos: f64,
-    #[reflect(min_value = 0.0, step = 0.05)]
     panning: f32,
-    #[reflect(min_value = 0.0, step = 0.05)]
     pitch: f64,
-    #[reflect(min_value = 0.0, step = 0.05)]
     gain: f32,
     looping: bool,
-    #[reflect(min_value = 0.0, max_value = 1.0, step = 0.05)]
     spatial_blend: f32,
     // Important coefficient for runtime resampling. It is used to modify playback speed
     // of a source in order to match output device sampling rate. PCM data can be stored
@@ -93,7 +85,6 @@ pub struct SoundSource {
     // hear that sound will have high pitch (2.0), to fix that we'll just pre-multiply
     // playback speed by 0.5.
     // However such auto-resampling has poor quality, but it is fast.
-    #[reflect(read_only)]
     resampling_multiplier: f64,
     status: Status,
     #[visit(optional)]
@@ -105,37 +96,26 @@ pub struct SoundSource {
     // can be with no respect to real distance attenuation (or what else affects channel
     // gain). So if these are None engine will set correct values first and only then it
     // will start interpolation of gain.
-    #[reflect(hidden)]
     #[visit(skip)]
     pub(crate) last_left_gain: Option<f32>,
-    #[reflect(hidden)]
     #[visit(skip)]
     pub(crate) last_right_gain: Option<f32>,
-    #[reflect(hidden)]
     #[visit(skip)]
     pub(crate) frame_samples: Vec<(f32, f32)>,
     // This sample is used when doing linear interpolation between two blocks of streaming buffer.
-    #[reflect(hidden)]
     #[visit(skip)]
     prev_buffer_sample: (f32, f32),
-    #[reflect(min_value = 0.0, step = 0.05)]
     radius: f32,
     position: Vector3<f32>,
-    #[reflect(min_value = 0.0, step = 0.05)]
     max_distance: f32,
-    #[reflect(min_value = 0.0, step = 0.05)]
     rolloff_factor: f32,
     // Some data that needed for iterative overlap-save convolution.
-    #[reflect(hidden)]
     #[visit(skip)]
     pub(crate) prev_left_samples: Vec<f32>,
-    #[reflect(hidden)]
     #[visit(skip)]
     pub(crate) prev_right_samples: Vec<f32>,
-    #[reflect(hidden)]
     #[visit(skip)]
     pub(crate) prev_sampling_vector: Vector3<f32>,
-    #[reflect(hidden)]
     #[visit(skip)]
     pub(crate) prev_distance_gain: Option<f32>,
 }

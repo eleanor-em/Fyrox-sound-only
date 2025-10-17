@@ -1,7 +1,7 @@
 //! Resource loader. It manages resource loading.
 
 use crate::{
-    core::uuid::Uuid, io::ResourceIo, options::BaseImportOptions, state::LoadError, ResourceData,
+    core::uuid::Uuid, io::ResourceIo, state::LoadError, ResourceData,
 };
 use std::{any::Any, future::Future, path::PathBuf, pin::Pin, sync::Arc};
 
@@ -62,20 +62,6 @@ pub trait ResourceLoader: ResourceLoaderTypeTrait {
 
     /// Loads or reloads a resource.
     fn load(&self, path: PathBuf, io: Arc<dyn ResourceIo>) -> BoxedLoaderFuture;
-
-    /// Tries to load import settings for a resource.
-    fn try_load_import_settings(
-        &self,
-        #[allow(unused_variables)] resource_path: PathBuf,
-        #[allow(unused_variables)] io: Arc<dyn ResourceIo>,
-    ) -> BoxedImportOptionsLoaderFuture {
-        Box::pin(async move { None })
-    }
-
-    /// Returns default import options for the resource.
-    fn default_import_options(&self) -> Option<Box<dyn BaseImportOptions>> {
-        None
-    }
 }
 
 pub struct LoaderPayload(pub(crate) Box<dyn ResourceData>);
@@ -93,10 +79,6 @@ pub type BoxedLoaderFuture = Pin<Box<dyn Future<Output = Result<LoaderPayload, L
 /// Future type for resource loading. See 'ResourceLoader'.
 #[cfg(not(target_arch = "wasm32"))]
 pub type BoxedLoaderFuture = Pin<Box<dyn Future<Output = Result<LoaderPayload, LoadError>> + Send>>;
-
-/// Future type for resource import options loading.
-pub type BoxedImportOptionsLoaderFuture =
-    Pin<Box<dyn Future<Output = Option<Box<dyn BaseImportOptions>>>>>;
 
 /// Container for resource loaders.
 #[derive(Default)]

@@ -4,7 +4,6 @@
 use crate::effects::{Effect, EffectRenderTrait};
 use fyrox_core::{
     pool::{Handle, Pool, Ticket},
-    reflect::prelude::*,
     visitor::prelude::*,
 };
 use std::fmt::{Debug, Formatter};
@@ -80,19 +79,16 @@ impl PingPongBuffer {
 /// samples through a chain of effects. Output signal is then can be either sent to an audio playback device or
 /// to some other audio bus and be processed again, but with different sound effects (this can be done via
 /// [`AudioBusGraph`].
-#[derive(Debug, Reflect, Visit, Clone)]
+#[derive(Debug, Visit, Clone)]
 pub struct AudioBus {
     pub(crate) name: String,
     effects: Vec<Effect>,
     gain: f32,
 
-    #[reflect(hidden)]
     child_buses: Vec<Handle<AudioBus>>,
 
-    #[reflect(hidden)]
     parent_bus: Handle<AudioBus>,
 
-    #[reflect(hidden)]
     #[visit(skip)]
     ping_pong_buffer: PingPongBuffer,
 }
@@ -283,7 +279,7 @@ impl AudioBus {
 /// ```
 ///
 /// If you delete an audio bus to which a bunch of sound sources is bound, then they will simply stop playing.
-#[derive(Default, Debug, Clone, Visit, Reflect)]
+#[derive(Default, Debug, Clone, Visit)]
 pub struct AudioBusGraph {
     buses: Pool<AudioBus>,
     root: Handle<AudioBus>,

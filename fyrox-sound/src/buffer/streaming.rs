@@ -32,14 +32,14 @@ use crate::{
     decoder::Decoder,
     error::SoundError,
 };
-use fyrox_core::{reflect::prelude::*, visitor::prelude::*};
+use fyrox_core::{visitor::prelude::*};
 use std::{
     ops::{Deref, DerefMut},
     time::Duration,
 };
 
 /// Streaming buffer for long sounds. Does not support random access.
-#[derive(Debug, Default, Visit, Reflect)]
+#[derive(Debug, Default, Visit)]
 pub struct StreamingBuffer {
     pub(crate) generic: GenericBuffer,
     /// Count of sources that share this buffer, it is important to keep only one
@@ -48,7 +48,6 @@ pub struct StreamingBuffer {
     #[visit(skip)]
     pub(crate) use_count: usize,
     #[visit(skip)]
-    #[reflect(hidden)]
     streaming_source: StreamingSource,
 }
 

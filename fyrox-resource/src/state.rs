@@ -1,7 +1,7 @@
 //! A module that handles resource states.
 
 use crate::{
-    core::{reflect::prelude::*, uuid::Uuid, visitor::prelude::*},
+    core::{uuid::Uuid, visitor::prelude::*},
     manager::ResourceManager,
     ResourceData, ResourceLoadError,
 };
@@ -12,8 +12,7 @@ use std::{
 };
 
 #[doc(hidden)]
-#[derive(Reflect, Debug, Default)]
-#[reflect(hide_all)]
+#[derive(Debug, Default)]
 pub struct WakersList(Vec<Waker>);
 
 impl Deref for WakersList {
@@ -31,8 +30,7 @@ impl DerefMut for WakersList {
 }
 
 /// Arbitrary loading error, that could be optionally be empty.  
-#[derive(Reflect, Debug, Clone, Default)]
-#[reflect(hide_all)]
+#[derive(Debug, Clone, Default)]
 pub struct LoadError(pub Option<Arc<dyn ResourceLoadError>>);
 
 impl LoadError {
@@ -53,7 +51,7 @@ impl LoadError {
 /// possible, use all available power of the CPU. To achieve that each resource
 /// ideally should be loaded on separate core of the CPU, but since this is
 /// asynchronous, we must have the ability to track the state of the resource.
-#[derive(Debug, Reflect)]
+#[derive(Debug)]
 pub enum ResourceState {
     /// Resource is loading from external resource or in the queue to load.
     Pending {
@@ -188,7 +186,6 @@ impl ResourceState {
 #[cfg(test)]
 mod test {
     use fyrox_core::{
-        reflect::{FieldInfo, Reflect},
         TypeUuidProvider,
     };
     use std::error::Error;
@@ -196,7 +193,7 @@ mod test {
 
     use super::*;
 
-    #[derive(Debug, Default, Reflect, Visit)]
+    #[derive(Debug, Default, Visit)]
     struct Stub {}
 
     impl ResourceData for Stub {

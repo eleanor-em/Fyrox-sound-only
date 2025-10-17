@@ -60,7 +60,6 @@ use crate::{
 };
 use fyrox_core::{
     log::Log,
-    reflect::prelude::*,
     uuid::{uuid, Uuid},
     visitor::{Visit, VisitResult, Visitor},
     TypeUuidProvider,
@@ -78,10 +77,9 @@ use std::path::Path;
 use std::{any::Any, fmt::Debug, fmt::Formatter, path::PathBuf, sync::Arc};
 
 /// See module docs.
-#[derive(Clone, Debug, Default, Reflect)]
+#[derive(Clone, Debug, Default)]
 pub struct HrtfRenderer {
     hrir_resource: Option<HrirSphereResource>,
-    #[reflect(hidden)]
     processor: Option<hrtf::HrtfProcessor>,
 }
 
@@ -182,9 +180,8 @@ impl HrtfRenderer {
 
 /// Wrapper for [`HrirSphere`] to be able to use it in the resource manager, that will handle async resource
 /// loading automatically.
-#[derive(Reflect, Default, Visit)]
+#[derive(Default, Visit)]
 pub struct HrirSphereResourceData {
-    #[reflect(hidden)]
     #[visit(skip)]
     hrir_sphere: Option<HrirSphere>,
 }

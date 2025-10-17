@@ -85,14 +85,13 @@ impl ResourceConstructorContainer {
 
 #[cfg(test)]
 mod test {
-    use fyrox_core::reflect::prelude::*;
     use fyrox_core::visitor::{Visit, VisitResult, Visitor};
     use std::error::Error;
     use std::path::Path;
 
     use super::*;
 
-    #[derive(Debug, Default, Reflect, Visit)]
+    #[derive(Debug, Default, Visit)]
     struct Stub {}
 
     impl ResourceData for Stub {

@@ -710,12 +710,11 @@ mod test {
 
     use fyrox_core::uuid::{uuid, Uuid};
     use fyrox_core::{
-        reflect::{FieldInfo, Reflect},
         visitor::{Visit, VisitResult, Visitor},
         TypeUuidProvider,
     };
 
-    #[derive(Debug, Default, Reflect, Visit)]
+    #[derive(Debug, Default, Visit)]
     struct Stub {}
 
     impl TypeUuidProvider for Stub {

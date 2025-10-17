@@ -19,7 +19,6 @@ use crate::{
 };
 use fyrox_core::{
     pool::{Handle, Pool},
-    reflect::prelude::*,
     uuid_provider,
     visitor::prelude::*,
 };
@@ -34,7 +33,7 @@ use strum_macros::{AsRefStr, EnumString, VariantNames};
 pub const SAMPLE_RATE: u32 = 44100;
 
 /// Distance model defines how volume of sound will decay when distance to listener changes.
-#[derive(Copy, Clone, Debug, Eq, PartialEq, Reflect, Visit, AsRefStr, EnumString, VariantNames)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Visit, AsRefStr, EnumString, VariantNames)]
 #[repr(u32)]
 pub enum DistanceModel {
     /// No distance attenuation at all.
@@ -109,7 +108,7 @@ pub struct SerializationOptions {
 }
 
 /// Internal state of context.
-#[derive(Default, Debug, Clone, Reflect)]
+#[derive(Default, Debug, Clone)]
 pub struct State {
     sources: Pool<SoundSource>,
     listener: Listener,
@@ -120,7 +119,6 @@ pub struct State {
     paused: bool,
     /// A set of flags, that can be used to define what should be skipped during the
     /// serialization of a sound context.
-    #[reflect(hidden)]
     pub serialization_options: SerializationOptions,
 }
 

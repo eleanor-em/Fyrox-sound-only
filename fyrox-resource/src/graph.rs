@@ -1,6 +1,6 @@
 //! Resource dependency graph. See [`ResourceDependencyGraph`] docs for more info.
 
-use crate::{collect_used_resources, state::ResourceState, untyped::UntypedResource};
+use crate::{untyped::UntypedResource};
 use fxhash::FxHashSet;
 
 /// A node of [`ResourceDependencyGraph`].
@@ -18,14 +18,8 @@ impl ResourceGraphNode {
         let mut children = Vec::new();
 
         // Look for dependent resources.
-        let mut dependent_resources = FxHashSet::default();
-
-        let header = resource.0.lock();
-        if let ResourceState::Ok(ref resource_data) = header.state {
-            (**resource_data).as_reflect(&mut |entity| {
-                collect_used_resources(entity, &mut dependent_resources);
-            });
-        }
+        let dependent_resources = FxHashSet::default();
+        let _header = resource.0.lock();
 
         children.extend(
             dependent_resources

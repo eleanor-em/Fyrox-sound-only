@@ -8,12 +8,11 @@
 use fyrox_core::{
     algebra::{Matrix3, Vector3},
     math::Matrix3Ext,
-    reflect::prelude::*,
     visitor::prelude::*,
 };
 
 /// See module docs.
-#[derive(Debug, Clone, Visit, Reflect)]
+#[derive(Debug, Clone, Visit)]
 pub struct Listener {
     basis: Matrix3<f32>,
     position: Vector3<f32>,

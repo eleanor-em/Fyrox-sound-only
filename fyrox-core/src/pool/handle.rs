@@ -1,5 +1,5 @@
 use crate::{
-    combine_uuids, pool::INVALID_GENERATION, reflect::prelude::*, uuid_provider,
+    combine_uuids, pool::INVALID_GENERATION, uuid_provider,
     visitor::prelude::*, TypeUuidProvider,
 };
 use std::{
@@ -14,17 +14,13 @@ use uuid::Uuid;
 /// Handle is some sort of non-owning reference to content in a pool. It stores
 /// index of object and additional information that allows to ensure that handle
 /// is still valid (points to the same object as when handle was created).
-#[derive(Reflect)]
 pub struct Handle<T> {
     /// Index of object in pool.
-    #[reflect(read_only, description = "Index of an object in a pool.")]
     pub(super) index: u32,
     /// Generation number, if it is same as generation of pool record at
     /// index of handle then this is valid handle.
-    #[reflect(read_only, description = "Generation of an object in a pool.")]
     pub(super) generation: u32,
     /// Type holder.
-    #[reflect(hidden)]
     pub(super) type_marker: PhantomData<T>,
 }
 
@@ -228,15 +224,13 @@ impl Debug for AtomicHandle {
 
 /// Type-erased handle.
 #[derive(
-    Copy, Clone, Debug, Ord, PartialOrd, PartialEq, Eq, Hash, Reflect, Visit,
+    Copy, Clone, Debug, Ord, PartialOrd, PartialEq, Eq, Hash, Visit,
 )]
 pub struct ErasedHandle {
     /// Index of object in pool.
-    #[reflect(read_only)]
     index: u32,
     /// Generation number, if it is same as generation of pool record at
     /// index of handle then this is valid handle.
-    #[reflect(read_only)]
     generation: u32,
 }
 

@@ -13,7 +13,6 @@ use crate::{
 };
 use fyrox_core::math::lerpf;
 use fyrox_core::{
-    reflect::prelude::*,
     uuid_provider,
     visitor::{Visit, VisitResult, Visitor},
 };
@@ -25,7 +24,7 @@ pub mod hrtf;
 // This "large size difference" is not a problem because renderer
 // can be only one at a time on context.
 #[allow(clippy::large_enum_variant)]
-#[derive(Debug, Clone, AsRefStr, EnumString, VariantNames, Visit, Reflect)]
+#[derive(Debug, Clone, AsRefStr, EnumString, VariantNames, Visit)]
 pub enum Renderer {
     /// Stateless default renderer.
     Default,

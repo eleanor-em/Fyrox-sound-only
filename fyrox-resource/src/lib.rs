@@ -6,7 +6,6 @@
 use crate::{
     core::{
         parking_lot::MutexGuard,
-        reflect::prelude::*,
         uuid::{uuid, Uuid},
         visitor::prelude::*,
         TypeUuidProvider,
@@ -14,7 +13,6 @@ use crate::{
     state::ResourceState,
     untyped::UntypedResource,
 };
-use fxhash::FxHashSet;
 use std::{
     any::Any,
     error::Error,
@@ -40,7 +38,6 @@ pub mod graph;
 pub mod io;
 pub mod loader;
 pub mod manager;
-pub mod options;
 pub mod state;
 pub mod untyped;
 
@@ -56,7 +53,7 @@ pub const SHADER_RESOURCE_UUID: Uuid = uuid!("f1346417-b726-492a-b80f-c02096c6c0
 pub const CURVE_RESOURCE_UUID: Uuid = uuid!("f28b949f-28a2-4b68-9089-59c234f58b6b");
 
 /// A trait for resource data.
-pub trait ResourceData: 'static + Debug + Visit + Send + Reflect {
+pub trait ResourceData: 'static + Debug + Visit + Send {
     /// Returns `self` as `&dyn Any`. It is useful to implement downcasting to a particular type.
     fn as_any(&self) -> &dyn Any;
 
@@ -125,13 +122,12 @@ where
 /// ## Default State
 ///
 /// Default state of the resource will be [`ResourceState::Ok`] with `T::default`.
-#[derive(Debug, Reflect)]
+#[derive(Debug)]
 pub struct Resource<T>
 where
     T: TypedResourceData,
 {
     untyped: UntypedResource,
-    #[reflect(hidden)]
     phantom: PhantomData<T>,
 }
 
@@ -494,102 +490,4 @@ where
                 .expect("Type mismatch!"),
         }
     }
-}
-
-/// Collects all resources used by a given entity. Internally, it uses reflection to iterate over
-/// each field of every descendant sub-object of the entity. This function could be used to collect
-/// all resources used by an object, which could be useful if you're building a resource dependency
-/// analyzer.
-pub fn collect_used_resources(
-    entity: &dyn Reflect,
-    resources_collection: &mut FxHashSet<UntypedResource>,
-) {
-    #[inline(always)]
-    fn type_is<T: Reflect>(entity: &dyn Reflect) -> bool {
-        let mut types_match = false;
-        entity.downcast_ref::<T>(&mut |v| {
-            types_match = v.is_some();
-        });
-        types_match
-    }
-
-    // Skip potentially large chunks of numeric data, that definitely cannot contain any resources.
-    // TODO: This is a brute-force solution which does not include all potential types with plain
-    // data.
-    let mut finished = type_is::<Vec<u8>>(entity)
-        || type_is::<Vec<u16>>(entity)
-        || type_is::<Vec<u32>>(entity)
-        || type_is::<Vec<u64>>(entity)
-        || type_is::<Vec<i8>>(entity)
-        || type_is::<Vec<i16>>(entity)
-        || type_is::<Vec<i32>>(entity)
-        || type_is::<Vec<i64>>(entity)
-        || type_is::<Vec<f32>>(entity)
-        || type_is::<Vec<f64>>(entity);
-
-    if finished {
-        return;
-    }
-
-    entity.downcast_ref::<UntypedResource>(&mut |v| {
-        if let Some(resource) = v {
-            resources_collection.insert(resource.clone());
-            finished = true;
-        }
-    });
-
-    if finished {
-        return;
-    }
-
-    entity.as_array(&mut |array| {
-        if let Some(array) = array {
-            for i in 0..array.reflect_len() {
-                if let Some(item) = array.reflect_index(i) {
-                    collect_used_resources(item, resources_collection)
-                }
-            }
-
-            finished = true;
-        }
-    });
-
-    if finished {
-        return;
-    }
-
-    entity.as_inheritable_variable(&mut |inheritable| {
-        if let Some(inheritable) = inheritable {
-            collect_used_resources(inheritable.inner_value_ref(), resources_collection);
-
-            finished = true;
-        }
-    });
-
-    if finished {
-        return;
-    }
-
-    entity.as_hash_map(&mut |hash_map| {
-        if let Some(hash_map) = hash_map {
-            for i in 0..hash_map.reflect_len() {
-                if let Some((key, value)) = hash_map.reflect_get_at(i) {
-                    collect_used_resources(key, resources_collection);
-                    collect_used_resources(value, resources_collection);
-                }
-            }
-
-            finished = true;
-        }
-    });
-
-    if finished {
-        return;
-    }
-
-    entity.fields(&mut |fields| {
-        for field in fields {
-            collect_used_resources(*field, resources_collection);
-        }
-    })
 }

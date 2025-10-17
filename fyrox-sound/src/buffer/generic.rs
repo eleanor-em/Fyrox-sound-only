@@ -24,11 +24,11 @@
 #![allow(clippy::manual_range_contains)]
 
 use crate::{buffer::DataSource, decoder::Decoder};
-use fyrox_core::{reflect::prelude::*, visitor::prelude::*};
+use fyrox_core::{visitor::prelude::*};
 use std::time::Duration;
 
 /// Generic sound buffer that contains decoded samples and allows random access.
-#[derive(Debug, Default, Visit, Reflect)]
+#[derive(Debug, Default, Visit)]
 pub struct GenericBuffer {
     /// Interleaved decoded samples (mono sounds: L..., stereo sounds: LR...)
     /// For streaming buffers it contains only small part of decoded data

@@ -5,31 +5,20 @@ use crate::{
     dsp::{filters::Biquad, filters::BiquadKind},
     effects::EffectRenderTrait,
 };
-use fyrox_core::{reflect::prelude::*, visitor::prelude::*};
+use fyrox_core::{visitor::prelude::*};
 
 macro_rules! define_filter_effect {
     ($(#[$attr:meta])* $name:ident, $kind:expr) => {
         $(#[$attr])*
-        #[derive(Clone, Reflect, Visit, Debug, PartialEq)]
+        #[derive(Clone, Visit, Debug, PartialEq)]
         pub struct $name {
-            #[reflect(
-                description = "Cutoff frequency in Hertz.",
-                setter = "set_cutoff_frequency_hz"
-            )]
             cutoff_frequency_hz: f32,
 
-            #[reflect(description = "Gain of the effect.", setter = "set_gain")]
             gain: f32,
 
-            #[reflect(
-                description = "Band width at the cutoff frequency, the higher the value the wider the band.",
-                setter = "set_quality"
-            )]
             quality: f32,
 
-            #[reflect(hidden)]
             left: Biquad,
-            #[reflect(hidden)]
             right: Biquad,
         }
 
