@@ -23,4 +23,3 @@ fxhash = "0.2.1"
 
 [dev-dependencies]
 fyrox-core = { path = "../fyrox-core" }
-futures = "0.3.16"
