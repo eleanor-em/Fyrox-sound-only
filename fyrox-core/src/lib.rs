@@ -30,7 +30,6 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use bytemuck::Pod;
 pub mod io;
 pub mod log;
 pub mod math;
@@ -292,7 +291,7 @@ pub fn make_relative_path<P: AsRef<Path>>(path: P) -> Result<PathBuf, std::io::E
 }
 
 /// "Transmutes" array of any sized type to a slice of bytes.
-pub fn array_as_u8_slice<T: Sized + Pod>(v: &[T]) -> &'_ [u8] {
+pub fn array_as_u8_slice<T: Sized>(v: &[T]) -> &'_ [u8] {
     // SAFETY: It is safe to reinterpret data to read it.
     unsafe { std::slice::from_raw_parts(v.as_ptr() as *const u8, std::mem::size_of_val(v)) }
 }
@@ -309,13 +308,13 @@ pub fn transmute_slice<T: Sized, U: Sized>(v: &[T]) -> &'_ [U] {
 }
 
 /// "Transmutes" value of any sized type to a slice of bytes.
-pub fn value_as_u8_slice<T: Sized + Pod>(v: &T) -> &'_ [u8] {
+pub fn value_as_u8_slice<T: Sized>(v: &T) -> &'_ [u8] {
     // SAFETY: It is safe to reinterpret data to read it.
     unsafe { std::slice::from_raw_parts(v as *const T as *const u8, std::mem::size_of::<T>()) }
 }
 
 /// Takes a vector of trivially-copyable values and turns it into a vector of bytes.
-pub fn transmute_vec_as_bytes<T: Pod>(vec: Vec<T>) -> Vec<u8> {
+pub fn transmute_vec_as_bytes<T>(vec: Vec<T>) -> Vec<u8> {
     unsafe {
         let mut vec = std::mem::ManuallyDrop::new(vec);
         Vec::from_raw_parts(
@@ -327,7 +326,7 @@ pub fn transmute_vec_as_bytes<T: Pod>(vec: Vec<T>) -> Vec<u8> {
 }
 
 /// Performs hashing of a sized value by interpreting it as raw memory.
-pub fn hash_as_bytes<T: Sized + Pod, H: Hasher>(value: &T, hasher: &mut H) {
+pub fn hash_as_bytes<T: Sized, H: Hasher>(value: &T, hasher: &mut H) {
     hasher.write(value_as_u8_slice(value))
 }
 
