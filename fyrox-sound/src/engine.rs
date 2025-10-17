@@ -82,7 +82,7 @@ impl SoundEngine {
     }
 
     /// Provides direct access to actual engine data.
-    pub fn state(&self) -> MutexGuard<State> {
+    pub fn state(&self) -> MutexGuard<'_, State> {
         self.0.lock().unwrap()
     }
 }

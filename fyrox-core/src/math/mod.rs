@@ -37,18 +37,6 @@ where
     }
 }
 
-impl Visit for TriangleDefinition {
-    fn visit(&mut self, name: &str, visitor: &mut Visitor) -> VisitResult {
-        let mut region = visitor.enter_region(name)?;
-
-        self.0[0].visit("A", &mut region)?;
-        self.0[1].visit("B", &mut region)?;
-        self.0[2].visit("C", &mut region)?;
-
-        Ok(())
-    }
-}
-
 impl Visit for AxisAlignedBoundingBox {
     fn visit(&mut self, name: &str, visitor: &mut Visitor) -> VisitResult {
         let mut region = visitor.enter_region(name)?;
@@ -85,10 +73,6 @@ impl Visit for Plane {
         Ok(())
     }
 }
-
-impl_reflect!(
-    pub struct TriangleDefinition(pub [u32; 3]);
-);
 
 impl_visit!(
     pub struct SmoothAngle {

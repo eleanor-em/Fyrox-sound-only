@@ -488,7 +488,7 @@ impl<T: Reflect> ResolvePath for T {
 }
 
 /// Splits property path into individual components.
-pub fn path_to_components(path: &str) -> Vec<Component> {
+pub fn path_to_components(path: &str) -> Vec<Component<'_>> {
     let mut components = Vec::new();
     let mut current_path = path;
     while let Ok((component, sub_path)) = Component::next(current_path) {

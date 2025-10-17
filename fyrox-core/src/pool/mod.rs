@@ -1108,7 +1108,7 @@ where
     /// ```
     #[must_use]
     #[inline]
-    pub fn iter(&self) -> PoolIterator<T, P> {
+    pub fn iter(&self) -> PoolIterator<'_, T, P> {
         unsafe {
             PoolIterator {
                 ptr: self.records.as_ptr(),
@@ -1122,7 +1122,7 @@ where
     /// Can be useful when there is a need to iterate over pool records and know a handle of
     /// that record.
     #[inline]
-    pub fn pair_iter(&self) -> PoolPairIterator<T, P> {
+    pub fn pair_iter(&self) -> PoolPairIterator<'_, T, P> {
         PoolPairIterator {
             pool: self,
             current: 0,
@@ -1145,7 +1145,7 @@ where
     /// ```
     #[must_use]
     #[inline]
-    pub fn iter_mut(&mut self) -> PoolIteratorMut<T, P> {
+    pub fn iter_mut(&mut self) -> PoolIteratorMut<'_, T, P> {
         unsafe {
             PoolIteratorMut {
                 ptr: self.records.as_mut_ptr(),
@@ -1159,7 +1159,7 @@ where
     /// Can be useful when there is a need to iterate over pool records and know a handle of
     /// that record.
     #[inline]
-    pub fn pair_iter_mut(&mut self) -> PoolPairIteratorMut<T, P> {
+    pub fn pair_iter_mut(&mut self) -> PoolPairIteratorMut<'_, T, P> {
         unsafe {
             PoolPairIteratorMut {
                 current: 0,
@@ -1198,7 +1198,7 @@ where
     /// Begins multi-borrow that allows you to borrow as many (`N`) **unique** references to the pool
     /// elements as you need. See [`MultiBorrowContext::try_get`] for more info.
     #[inline]
-    pub fn begin_multi_borrow(&mut self) -> MultiBorrowContext<T, P> {
+    pub fn begin_multi_borrow(&mut self) -> MultiBorrowContext<'_, T, P> {
         MultiBorrowContext::new(self)
     }
 

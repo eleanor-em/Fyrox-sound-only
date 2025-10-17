@@ -11,14 +11,12 @@ pub mod segment;
 pub mod triangulator;
 
 use crate::ray::IntersectionResult;
-use bytemuck::{Pod, Zeroable};
 use nalgebra::{
     Matrix3, Matrix4, RealField, Scalar, SimdRealField, UnitQuaternion, Vector2, Vector3,
 };
 use std::{
     fmt::Debug,
     hash::{Hash, Hasher},
-    ops::{Index, IndexMut},
 };
 
 pub use rectutils::*;
@@ -421,61 +419,6 @@ impl Hash for TriangleEdge {
     }
 }
 
-#[derive(Clone, Copy, PartialEq, Eq, Debug, Default, Hash, Pod, Zeroable)]
-#[repr(C)]
-pub struct TriangleDefinition(pub [u32; 3]);
-
-impl TriangleDefinition {
-    #[inline]
-    pub fn indices(&self) -> &[u32] {
-        self.as_ref()
-    }
-
-    #[inline]
-    pub fn indices_mut(&mut self) -> &mut [u32] {
-        self.as_mut()
-    }
-
-    #[inline]
-    pub fn edges(&self) -> [TriangleEdge; 3] {
-        [
-            TriangleEdge {
-                a: self.0[0],
-                b: self.0[1],
-            },
-            TriangleEdge {
-                a: self.0[1],
-                b: self.0[2],
-            },
-            TriangleEdge {
-                a: self.0[2],
-                b: self.0[0],
-            },
-        ]
-    }
-
-    #[inline]
-    pub fn add(&self, i: u32) -> Self {
-        Self([self.0[0] + i, self.0[1] + i, self.0[2] + i])
-    }
-}
-
-impl Index<usize> for TriangleDefinition {
-    type Output = u32;
-
-    #[inline]
-    fn index(&self, index: usize) -> &Self::Output {
-        &self.0[index]
-    }
-}
-
-impl IndexMut<usize> for TriangleDefinition {
-    #[inline]
-    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
-        &mut self.0[index]
-    }
-}
-
 pub trait PositionProvider: Sized {
     fn position(&self) -> Vector3<f32>;
 }
@@ -484,20 +427,6 @@ impl PositionProvider for Vector3<f32> {
     #[inline]
     fn position(&self) -> Vector3<f32> {
         *self
-    }
-}
-
-impl AsRef<[u32]> for TriangleDefinition {
-    #[inline]
-    fn as_ref(&self) -> &[u32] {
-        &self.0
-    }
-}
-
-impl AsMut<[u32]> for TriangleDefinition {
-    #[inline]
-    fn as_mut(&mut self) -> &mut [u32] {
-        &mut self.0
     }
 }
 
@@ -520,33 +449,6 @@ pub fn get_closest_point<P: PositionProvider>(points: &[P], point: Vector3<f32>)
     closest_index
 }
 
-/// Returns a tuple of (point index; triangle index) closest to the given point.
-#[inline]
-pub fn get_closest_point_triangles<P>(
-    points: &[P],
-    triangles: &[TriangleDefinition],
-    triangle_indices: impl Iterator<Item = usize>,
-    point: Vector3<f32>,
-) -> Option<(usize, usize)>
-where
-    P: PositionProvider,
-{
-    let mut closest_sqr_distance = f32::MAX;
-    let mut closest_index = None;
-    for triangle_index in triangle_indices {
-        let triangle = triangles.get(triangle_index).unwrap();
-        for point_index in triangle.0.iter() {
-            let vertex = points.get(*point_index as usize).unwrap();
-            let sqr_distance = (vertex.position() - point).norm_squared();
-            if sqr_distance < closest_sqr_distance {
-                closest_sqr_distance = sqr_distance;
-                closest_index = Some((*point_index as usize, triangle_index));
-            }
-        }
-    }
-    closest_index
-}
-
 #[inline]
 pub fn get_arbitrary_line_perpendicular(
     begin: Vector3<f32>,
@@ -560,31 +462,6 @@ pub fn get_arbitrary_line_perpendicular(
         }
     }
     None
-}
-
-/// Returns a tuple of (point index; triangle index) closest to the given point.
-#[inline]
-pub fn get_closest_point_triangle_set<P>(
-    points: &[P],
-    triangles: &[TriangleDefinition],
-    point: Vector3<f32>,
-) -> Option<(usize, usize)>
-where
-    P: PositionProvider,
-{
-    let mut closest_sqr_distance = f32::MAX;
-    let mut closest_index = None;
-    for (triangle_index, triangle) in triangles.iter().enumerate() {
-        for point_index in triangle.0.iter() {
-            let vertex = points.get(*point_index as usize).unwrap();
-            let sqr_distance = (vertex.position() - point).norm_squared();
-            if sqr_distance < closest_sqr_distance {
-                closest_sqr_distance = sqr_distance;
-                closest_index = Some((*point_index as usize, triangle_index));
-            }
-        }
-    }
-    closest_index
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -848,11 +725,11 @@ mod test {
 
     use super::{
         barycentric_is_inside, barycentric_to_world, cubicf_derivative, get_barycentric_coords,
-        get_barycentric_coords_2d, get_closest_point, get_closest_point_triangle_set,
-        get_closest_point_triangles, get_farthest_point, get_signed_triangle_area, ieee_remainder,
+        get_barycentric_coords_2d, get_closest_point,
+        get_farthest_point, get_signed_triangle_area, ieee_remainder,
         inf_sup_cubicf, quat_from_euler, round_to_step, spherical_to_cartesian, triangle_area,
         wrap_angle, wrapf, Matrix3Ext, Matrix4Ext, PositionProvider, Rect, RotationOrder,
-        SmoothAngle, TriangleDefinition, TriangleEdge, Vector2Ext, Vector3Ext,
+        SmoothAngle, TriangleEdge, Vector2Ext, Vector3Ext,
     };
     use nalgebra::Vector2;
 
@@ -1230,68 +1107,10 @@ mod test {
     }
 
     #[test]
-    fn triangle_definition_indices() {
-        assert_eq!(TriangleDefinition([0, 0, 0]).indices(), &[0, 0, 0]);
-    }
-
-    #[test]
-    fn triangle_definition_indices_mut() {
-        assert_eq!(TriangleDefinition([0, 0, 0]).indices_mut(), &mut [0, 0, 0]);
-    }
-
-    #[test]
-    fn triangle_definition_edges() {
-        let t = TriangleDefinition([0, 1, 2]);
-        assert_eq!(
-            t.edges(),
-            [
-                TriangleEdge { a: 0, b: 1 },
-                TriangleEdge { a: 1, b: 2 },
-                TriangleEdge { a: 2, b: 0 }
-            ]
-        );
-    }
-
-    #[test]
-    fn index_for_triangle_definition() {
-        let t = TriangleDefinition([0, 1, 2]);
-
-        assert_eq!(t[0], 0);
-        assert_eq!(t[1], 1);
-        assert_eq!(t[2], 2);
-    }
-
-    #[test]
-    fn index_mut_for_triangle_definition() {
-        let mut t = TriangleDefinition([5, 5, 5]);
-        t[0] = 0;
-        t[1] = 1;
-        t[2] = 2;
-
-        assert_eq!(t[0], 0);
-        assert_eq!(t[1], 1);
-        assert_eq!(t[2], 2);
-    }
-
-    #[test]
     fn position_provider_for_vector3() {
         let v = Vector3::new(0.0, 1.0, 2.0);
 
         assert_eq!(v.position(), v);
-    }
-
-    #[test]
-    fn as_ref_for_triangle_definition() {
-        let t = TriangleDefinition([0, 1, 2]);
-
-        assert_eq!(t.as_ref(), &[0, 1, 2]);
-    }
-
-    #[test]
-    fn as_mut_for_triangle_definition() {
-        let mut t = TriangleDefinition([0, 1, 2]);
-
-        assert_eq!(t.as_mut(), &mut [0, 1, 2]);
     }
 
     #[test]
@@ -1313,43 +1132,6 @@ mod test {
         assert_eq!(
             get_closest_point(&points, Vector3::new(0.0, 0.0, 10.0)),
             Some(2),
-        );
-    }
-
-    #[test]
-    fn test_get_closest_point_triangles() {
-        let points = [
-            Vector3::new(0.0, 0.0, 0.0),
-            Vector3::new(1.0, 0.0, 0.0),
-            Vector3::new(0.0, 1.0, 0.0),
-            Vector3::new(0.0, 0.0, 1.0),
-        ];
-        let triangles = [TriangleDefinition([0, 1, 2]), TriangleDefinition([1, 2, 3])];
-
-        assert_eq!(
-            get_closest_point_triangles(
-                &points,
-                &triangles,
-                [0, 1].into_iter(),
-                Vector3::new(1.0, 1.0, 1.0)
-            ),
-            Some((1, 0))
-        );
-    }
-
-    #[test]
-    fn test_get_closest_point_triangle_set() {
-        let points = [
-            Vector3::new(0.0, 0.0, 0.0),
-            Vector3::new(1.0, 0.0, 0.0),
-            Vector3::new(0.0, 1.0, 0.0),
-            Vector3::new(0.0, 0.0, 1.0),
-        ];
-        let triangles = [TriangleDefinition([0, 1, 2]), TriangleDefinition([1, 2, 3])];
-
-        assert_eq!(
-            get_closest_point_triangle_set(&points, &triangles, Vector3::new(1.0, 1.0, 1.0)),
-            Some((1, 0))
         );
     }
 

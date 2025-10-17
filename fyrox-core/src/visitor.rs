@@ -1346,7 +1346,7 @@ impl Visitor {
     /// If not reading, create a node with the given name as a chld of the current
     /// node, and return a visitor for the new node. Return an error if a node with
     /// that name already exists.
-    pub fn enter_region(&mut self, name: &str) -> Result<RegionGuard, VisitError> {
+    pub fn enter_region(&mut self, name: &str) -> Result<RegionGuard<'_>, VisitError> {
         let node = self.nodes.borrow(self.current_node);
         if self.reading {
             let mut region = Handle::NONE;

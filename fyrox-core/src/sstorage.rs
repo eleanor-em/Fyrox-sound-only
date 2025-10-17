@@ -10,7 +10,6 @@ use crate::{
 };
 use fxhash::{FxHashMap, FxHasher};
 pub use fyrox_core_derive::TypeUuidProvider;
-use serde::{Deserialize, Serialize};
 use std::{
     fmt::{Debug, Display, Formatter},
     hash::{Hash, Hasher},
@@ -64,50 +63,6 @@ impl Visit for ImmutableString {
         }
 
         Ok(())
-    }
-}
-
-impl Serialize for ImmutableString {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        serializer.serialize_str(self.as_str())
-    }
-}
-
-impl<'de> Deserialize<'de> for ImmutableString {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        Ok(ImmutableString::new(
-            deserializer.deserialize_string(ImmutableStringVisitor {})?,
-        ))
-    }
-}
-
-struct ImmutableStringVisitor {}
-
-impl serde::de::Visitor<'_> for ImmutableStringVisitor {
-    type Value = ImmutableString;
-
-    fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(formatter, "a string")
-    }
-
-    fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
-    where
-        E: serde::de::Error,
-    {
-        Ok(ImmutableString::new(v))
-    }
-
-    fn visit_string<E>(self, v: String) -> Result<Self::Value, E>
-    where
-        E: serde::de::Error,
-    {
-        Ok(v.into())
     }
 }
 
