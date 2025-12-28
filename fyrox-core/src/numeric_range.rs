@@ -1,5 +1,5 @@
 use crate::num_traits::Num;
-use rand::{distributions::uniform::SampleUniform, Rng};
+use rand::{distr::uniform::SampleUniform, Rng};
 use std::ops::Range;
 
 fn min<T>(a: T, b: T) -> T
@@ -41,7 +41,7 @@ impl<T: Num + PartialOrd + SampleUniform + Copy> RangeExt<T> for Range<T> {
         if start == end {
             start
         } else {
-            rng.gen_range(Range { start, end })
+            rng.random_range(Range { start, end })
         }
     }
 
