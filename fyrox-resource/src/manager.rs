@@ -9,10 +9,8 @@ use crate::{
         futures::future::join_all,
         // io::FileLoadError,
         log::Log,
-        make_relative_path, notify,
         parking_lot::{Mutex, MutexGuard},
         task::TaskPool,
-        watcher::FileSystemWatcher,
         TypeUuidProvider,
     },
     entry::{TimedEntry, DEFAULT_RESOURCE_LIFETIME},
@@ -68,7 +66,6 @@ pub struct ResourceManagerState {
 
     resources: Vec<TimedEntry<UntypedResource>>,
     task_pool: Arc<TaskPool>,
-    watcher: Option<FileSystemWatcher>,
 }
 
 /// See module docs.
@@ -367,7 +364,6 @@ impl ResourceManagerState {
             loaders: Default::default(),
             event_broadcaster: Default::default(),
             constructors_container: Default::default(),
-            watcher: None,
             built_in_resources: Default::default(),
             // Use the file system resource io by default
             resource_io: Arc::new(FsResourceIo),
@@ -383,14 +379,6 @@ impl ResourceManagerState {
     /// loading assets
     pub fn set_resource_io(&mut self, resource_io: Arc<dyn ResourceIo>) {
         self.resource_io = resource_io;
-    }
-
-    /// Sets resource watcher which will track any modifications in file system and forcing
-    /// the manager to reload changed resources. By default there is no watcher, since it
-    /// may be an undesired effect to reload resources at runtime. This is very useful thing
-    /// for fast iterative development.
-    pub fn set_watcher(&mut self, watcher: Option<FileSystemWatcher>) {
-        self.watcher = watcher;
     }
 
     /// Returns total amount of registered resources.
@@ -449,25 +437,6 @@ impl ResourceManagerState {
                 true
             }
         });
-
-        if let Some(watcher) = self.watcher.as_ref() {
-            if let Some(evt) = watcher.try_get_event() {
-                if let notify::EventKind::Modify(_) = evt.kind {
-                    for path in evt.paths {
-                        if let Ok(relative_path) = make_relative_path(path) {
-                            if self.try_reload_resource_from_path(&relative_path) {
-                                Log::info(format!(
-                                        "File {} was changed, trying to reload a respective resource...",
-                                        relative_path.display()
-                                    ));
-
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-        }
     }
 
     /// Adds a new resource in the container.
@@ -702,7 +671,6 @@ impl ResourceManagerState {
 #[cfg(test)]
 mod test {
     use std::error::Error;
-    use std::{fs::File, time::Duration};
 
     use crate::loader::{BoxedLoaderFuture, LoaderPayload, ResourceLoader};
 
@@ -787,21 +755,7 @@ mod test {
         assert!(state.loaders.is_empty());
         assert!(state.built_in_resources.is_empty());
         assert!(state.constructors_container.is_empty());
-        assert!(state.watcher.is_none());
         assert!(state.is_empty());
-    }
-
-    #[test]
-    fn resource_manager_state_set_watcher() {
-        let mut state = new_resource_manager();
-        assert!(state.watcher.is_none());
-
-        let path = PathBuf::from("test.txt");
-        if File::create(path.clone()).is_ok() {
-            let watcher = FileSystemWatcher::new(path.clone(), Duration::from_secs(1));
-            state.set_watcher(watcher.ok());
-            assert!(state.watcher.is_some());
-        }
     }
 
     #[test]
